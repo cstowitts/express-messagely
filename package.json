@@ -19,5 +19,14 @@
     "pg": "*",
     "supertest": "*"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cstowitts/express-messagely.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/cstowitts/express-messagely/issues"
+  },
+  "homepage": "https://github.com/cstowitts/express-messagely#readme",
   "description": ""
 }
