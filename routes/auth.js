@@ -2,7 +2,6 @@
 
 const jwt = require("jsonwebtoken");
 const db = require("../db");
-const { ensureCorrectUser } = require("../middleware/auth");
 
 const Router = require("express").Router;
 const router = new Router();
@@ -10,13 +9,13 @@ const router = new Router();
 const User = require("../models/user");
 const { SECRET_KEY } = require("../config");
 const { UnauthorizedError } = require("../expressError");
-const { register } = require("../models/user");
 
 
 
 
 /** POST /login: {username, password} => {token} */
 router.post("/login", async function (req, res, next) {
+
     const { username, password } = req.body;
 
     const isAuthenticated = await User.authenticate(username, password);
@@ -36,6 +35,7 @@ router.post("/login", async function (req, res, next) {
  * {username, password, first_name, last_name, phone} => {token}.
  */
 router.post("/register", async function (req, res, next) {
+
     const { username } =  await User.register(req.body);
 
     const token = jwt.sign({ username }, SECRET_KEY);
