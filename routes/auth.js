@@ -1,6 +1,6 @@
 "use strict";
 
-const { JsonWebTokenError } = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 const db = require("../db");
 const { ensureCorrectUser } = require("../middleware/auth");
 
@@ -10,6 +10,7 @@ const router = new Router();
 const User = require("../models/user");
 const { SECRET_KEY } = require("../config");
 const { UnauthorizedError } = require("../expressError");
+const { register } = require("../models/user");
 
 
 
@@ -33,6 +34,12 @@ router.post("/login", ensureCorrectUser, async function (req, res, next) {
  *
  * {username, password, first_name, last_name, phone} => {token}.
  */
+router.post("/register", async function (req, res, next) {
+    const { user } = await register(req.body);
+    const token = jwt.sign({ user }, SECRET_KEY);
+
+    return res.json({ token });
+});
 
 
 
