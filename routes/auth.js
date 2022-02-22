@@ -16,12 +16,13 @@ const { register } = require("../models/user");
 
 
 /** POST /login: {username, password} => {token} */
-router.post("/login", ensureCorrectUser, async function (req, res, next) {
+router.post("/login", async function (req, res, next) {
     const { username, password } = req.body;
+
     const isAuthenticated = await User.authenticate(username, password);
-   
     if(isAuthenticated === true){
         const token = jwt.sign({ username }, SECRET_KEY);
+        User.updateLoginTimestamp(username);
         return res.json({ token });
     }
 
@@ -35,8 +36,11 @@ router.post("/login", ensureCorrectUser, async function (req, res, next) {
  * {username, password, first_name, last_name, phone} => {token}.
  */
 router.post("/register", async function (req, res, next) {
-    const { user } = await register(req.body);
-    const token = jwt.sign({ user }, SECRET_KEY);
+    const { username } =  await User.register(req.body);
+
+    const token = jwt.sign({ username }, SECRET_KEY);
+
+    User.updateLoginTimestamp(username);
 
     return res.json({ token });
 });

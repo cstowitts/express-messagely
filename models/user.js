@@ -94,7 +94,7 @@ class User {
    *          join_at,
    *          last_login_at } 
    * 
-   * will throw error if user is not found
+   * will throw error if user is
    * */
 
   static async get(username) {
