@@ -25,9 +25,10 @@ class User {
                               first_name,
                               last_name, 
                               phone,
-                              join_at)
+                              join_at,
+                              last_login_at)
             VALUES 
-              ($1, $2, $3, $4, $5, current_timestamp)
+              ($1, $2, $3, $4, $5, current_timestamp, current_timestamp)
             RETURNING username, password, first_name, last_name, phone`,
       [username, hashedPassword, first_name, last_name, phone]);
 
@@ -177,7 +178,7 @@ class User {
     return result.rows.map(msg => ({
       id: msg.id,
       from_user: {
-        username: msg.to_username,
+        username: msg.from_username,
         first_name: msg.first_name,
         last_name: msg.last_name,
         phone: msg.phone,
