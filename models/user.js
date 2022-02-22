@@ -17,18 +17,19 @@ class User {
 
   static async register({ username, password, first_name, last_name, phone }) {
     const hashedPassword = await bcrypt.hash(
-          password, BCRYPT_WORK_FACTOR);
+      password, BCRYPT_WORK_FACTOR);
 
     const result = await db.query(
-          `INSERT INTO users (username,
+      `INSERT INTO users (username,
                               password,
                               first_name,
                               last_name, 
-                              phone)
+                              phone,
+                              join_at)
             VALUES 
-              ($1, $2, $3, $4, $5)
+              ($1, $2, $3, $4, $5, current_timestamp)
             RETURNING username, password, first_name, last_name, phone`,
-            [username, hashedPassword, first_name, last_name, phone]);
+      [username, hashedPassword, first_name, last_name, phone]);
 
     return result.rows[0];
   }
@@ -40,18 +41,18 @@ class User {
       `SELECT password 
        FROM users 
        WHERE username = $1`,
-       [username]);
+      [username]);
 
     const user = result.rows[0];
-    
+
     if (user) {
       if (await bcrypt.compare(password, user.password) === true) {
         return true;
       }
     }
-    
+
     return false;
-    
+
   }
 
   /** Update last_login_at for user */
@@ -62,7 +63,7 @@ class User {
        SET last_login_at = current_timestamp
        WHERE username = $1
        RETURNING username`,
-       [username]);
+      [username]);
 
     const user = result.rows[0];
 
@@ -94,16 +95,16 @@ class User {
 
   static async get(username) {
     const result = await db.query(
-          `SELECT username,
+      `SELECT username,
                 first_name,
                 last_name,
                 phone,
                 join_at,
                 last_login_at
           FROM users
-          WHERE username = $1`, 
+          WHERE username = $1`,
       [username]);
-    
+
     let user = result.rows[0];
 
     if (!user) throw new NotFoundError(`No such user: ${username}`);
@@ -121,7 +122,7 @@ class User {
 
   static async messagesFrom(username) {
     const result = await db.query(
-          `SELECT m.id,
+      `SELECT m.id,
                   m.to_username,
                   m.body,
                   m.sent_at,
@@ -130,15 +131,23 @@ class User {
                   u.first_name,
                   u.last_name,
                   u.phone
-          
-          
-          
           FROM users AS u
                JOIN messages AS m ON u.username = m.to_username
-          WHERE m.from_username = $1`, 
-          [username]
-    )
+          WHERE m.from_username = $1`,
+      [username]);
 
+    return result.rows.map(msg => ({
+      id: msg.id,
+      to_user: {
+        username: msg.to_username,
+        first_name: msg.first_name,
+        last_name: msg.last_name,
+        phone: msg.phone,
+      },
+      body: msg.body,
+      sent_at: msg.sent_at,
+      read_at: msg.read_at,
+    }));
   }
 
   /** Return messages to this user.
@@ -146,10 +155,38 @@ class User {
    * [{id, from_user, body, sent_at, read_at}]
    *
    * where from_user is
-   *   {id, first_name, last_name, phone}
+   *   {username, first_name, last_name, phone}
    */
 
   static async messagesTo(username) {
+    const result = await db.query(
+      `SELECT m.id,
+              m.from_username,
+              m.body,
+              m.sent_at,
+              m.read_at,
+              u.username,
+              u.first_name,
+              u.last_name,
+              u.phone
+      FROM users AS u
+           JOIN messages AS m ON u.username = m.from_username
+      WHERE m.to_username = $1`,
+      [username]);
+
+    return result.rows.map(msg => ({
+      id: msg.id,
+      from_user: {
+        username: msg.to_username,
+        first_name: msg.first_name,
+        last_name: msg.last_name,
+        phone: msg.phone,
+      },
+      body: msg.body,
+      sent_at: msg.sent_at,
+      read_at: msg.read_at,
+    }));
+
   }
 }
 
