@@ -3,6 +3,7 @@
 const { route } = require("express/lib/application");
 const { UnauthorizedError } = require("../expressError");
 const { ensureLoggedIn } = require("../middleware/auth");
+const Message = require("../models/message");
 
 const Router = require("express").Router;
 const router = new Router();
@@ -30,14 +31,14 @@ router.get("/:id", ensureLoggedIn, async function(req, res, next){
         return res.json({ message: msg });
     } 
     
-    throw new UnauthorizedError;
+    throw new UnauthorizedError();
 
 })
 
 
 /** POST / - post message.
  *
- * {to_username, body} =>
+ * {from_username, to_username, body} =>
  *   {message: {id, from_username, to_username, body, sent_at}}
  *
  **/
@@ -58,6 +59,18 @@ router.post("/", ensureLoggedIn, async function (req, res, next){
  * Makes sure that the only the intended recipient can mark as read.
  *
  **/
+
+router.post("/:id/read", ensureLoggedIn, async function (req, res, next){
+    const msg = await Message.get(req.params.id);
+    const toUser = msg.to_user.username;
+    const currUser = res.locals.user.username;
+    if(toUser === currUser){
+        const readMsg = await Message.markRead(req.params.id);
+        return res.json({ message: readMsg });
+    }
+    throw new UnauthorizedError("Can't mark message as read");
+
+});
 
 
 module.exports = router;

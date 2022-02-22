@@ -13,7 +13,7 @@ const User = require("../models/user");
 
 router.get("/", ensureLoggedIn, async function (req, res, next) {
     const users = await User.all();
-    return res.json({ users });
+    return res.json({ users: users });
 
 });
 
@@ -24,7 +24,7 @@ router.get("/", ensureLoggedIn, async function (req, res, next) {
  **/
 router.get("/:username", ensureCorrectUser, async function (req, res, next) {
     const user = await User.get(req.params.username);
-    return res.json({ user });
+    return res.json({ user: user });
 });
 
 
