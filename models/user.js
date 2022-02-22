@@ -92,7 +92,10 @@ class User {
    *          last_name,
    *          phone,
    *          join_at,
-   *          last_login_at } */
+   *          last_login_at } 
+   * 
+   * will throw error if user is not found
+   * */
 
   static async get(username) {
     const result = await db.query(
